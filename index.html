@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EverBloomお申し込み</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await liff.init({ liffId: '2007541240-wnk2xnnk' });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        const profile = await liff.getProfile();
+        document.getElementById('lineName').value = profile.displayName;
+        document.getElementById('lineId').value = profile.userId;
+      }
+    });
+
+    function togglePlanOptions() {
+      const plan = document.querySelector('input[name="plan"]:checked').value;
+      document.getElementById('schoolOptions').classList.toggle('hidden', plan !== 'スクールプラン');
+      document.getElementById('weddingMessage').classList.toggle('hidden', plan !== 'ウエディングプラン');
+    }
+
+    function toggleOtherNote() {
+      const otherChecked = document.getElementById('video_other').checked;
+      document.getElementById('otherVideoNote').classList.toggle('hidden', !otherChecked);
+    }
+
+    function handleSubmit(event) {
+      const form = event.target;
+      const formData = new FormData(form);
+      const plan = formData.get('plan');
+      const discount = formData.get('student_discount');
+
+      if (plan === 'スクールプラン' && discount === '使用する') {
+        const lineName = formData.get('lineName');
+        const lineId = formData.get('lineId');
+
+        liff.sendMessages([
+          {
+            type: 'text',
+            text: `${lineName}さん、学割の証明画像をトークで送信してください。`
+          }
+        ]).catch(err => console.error('Send message error:', err));
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-pink-100 to-yellow-100 min-h-screen flex items-center justify-center p-4">
+  <form class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-2xl space-y-6 animate-fade-in" method="POST" action="YOUR_GOOGLE_APPS_SCRIPT_URL" onsubmit="handleSubmit(event)">
+    <h1 class="text-3xl font-bold text-pink-500 text-center">動画制作アンケート</h1>
+
+    <!-- LINE情報 -->
+    <input type="hidden" name="lineName" id="lineName">
+    <input type="hidden" name="lineId" id="lineId">
+
+    <!-- お名前 -->
+    <div>
+      <label class="block font-semibold mb-1">お名前</label>
+      <input type="text" name="name" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+    </div>
+
+    <!-- メールアドレス -->
+    <div>
+      <label class="block font-semibold mb-1">メールアドレス</label>
+      <input type="email" name="email" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+    </div>
+
+    <!-- プラン選択 -->
+    <div>
+      <label class="block font-semibold mb-1">プランを選択してください</label>
+      <label><input type="radio" name="plan" value="スクールプラン" onclick="togglePlanOptions()" required> スクールプラン</label>
+      <label class="ml-4"><input type="radio" name="plan" value="ウエディングプラン" onclick="togglePlanOptions()"> ウエディングプラン</label>
+    </div>
+
+    <!-- スクールプランオプション -->
+    <div id="schoolOptions" class="hidden">
+      <label class="block font-semibold mb-1 mt-4">学割を利用しますか？</label>
+      <label><input type="radio" name="student_discount" value="使用する"> 使用する</label>
+      <label class="ml-4"><input type="radio" name="student_discount" value="使用しない"> 使用しない</label>
+      <p class="text-sm text-gray-500 mt-2">※使用する場合は、LINEトークにて証明画像を送信してください。</p>
+    </div>
+
+    <!-- ウエディングメッセージ -->
+    <div id="weddingMessage" class="hidden">
+      <p class="text-sm text-red-500 font-semibold">※ウエディングプランでは学割は使用できません。</p>
+    </div>
+
+    <!-- 予算 -->
+    <div>
+      <label class="block font-semibold mb-1">予算</label>
+      <input type="text" name="budget" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+    </div>
+
+    <!-- 納品目安期間 -->
+    <div>
+      <label class="block font-semibold mb-1">納品目安期間</label>
+      <select name="delivery_time" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+        <option value="2週間">2週間</option>
+        <option value="3週間">3週間</option>
+        <option value="4週間以上">4週間以上</option>
+      </select>
+    </div>
+
+    <!-- 動画形態（単一選択） -->
+    <div>
+      <label class="block font-semibold mb-1">動画形態（1つ選択）</label>
+      <div class="space-y-1">
+        <label><input type="radio" name="video_type" value="歌詞動画" required> 歌詞動画</label><br>
+        <label><input type="radio" name="video_type" value="思い出動画"> 思い出動画</label><br>
+        <label><input type="radio" name="video_type" value="オープニングムービー"> オープニングムービー</label><br>
+        <label><input type="radio" name="video_type" value="エンディングムービー"> エンディングムービー</label><br>
+        <label><input type="radio" name="video_type" value="プロフィールムービー"> プロフィールムービー</label><br>
+        <label><input type="radio" id="video_other" name="video_type" value="その他" onclick="toggleOtherNote()"> その他</label>
+        <p id="otherVideoNote" class="hidden text-sm text-gray-500 mt-1">※「その他」を選択した場合はトークにて要望をお伝えください。</p>
+      </div>
+    </div>
+
+    <!-- 制作素材 -->
+    <div>
+      <label class="block font-semibold mb-1">制作に必要なもの（複数選択可）</label>
+      <label><input type="checkbox" name="materials" value="写真"> 写真</label>
+      <label class="ml-4"><input type="checkbox" name="materials" value="動画"> 動画</label>
+    </div>
+
+    <!-- 使用する要素 -->
+    <div>
+      <label class="block font-semibold mb-1">動画に使用するもの（複数選択可）</label>
+      <div class="flex flex-wrap gap-3">
+        <label><input type="checkbox" name="elements" value="テキスト"> テキスト</label>
+        <label><input type="checkbox" name="elements" value="BGM"> BGM</label>
+        <label><input type="checkbox" name="elements" value="トランジション"> トランジション</label>
+        <label><input type="checkbox" name="elements" value="エフェクト"> エフェクト</label>
+        <label><input type="checkbox" name="elements" value="効果音"> 効果音</label>
+        <label><input type="checkbox" name="elements" value="その他"> その他</label>
+      </div>
+    </div>
+
+    <!-- 送信 -->
+    <div class="text-center">
+      <button type="submit" class="bg-pink-400 hover:bg-pink-500 text-white px-6 py-2 rounded-full shadow-lg transition duration-300">送信する</button>
+    </div>
+  </form>
+</body>
+</html>
